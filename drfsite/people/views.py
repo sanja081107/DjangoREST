@@ -1,10 +1,14 @@
 from django.forms import model_to_dict
 from django.shortcuts import render
 from rest_framework import generics, viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import *
+from .permissions import *
 from .serializers import *
 
 # 1-----------------------------------------------------
@@ -135,23 +139,52 @@ class PeopleAPIView(APIView):
         return Response({'post': 'delete post ' + str(pk)})
 
 
+class PeopleViewSet(viewsets.ModelViewSet):                                 # ModelViewSet заменяет 4 следующих класса
+    # queryset = People.objects.all()
+    serializer_class = PeopleSerializer
+
+    def get_queryset(self):
+        pk = self.kwargs.get('pk')
+
+        if not pk:
+            return People.objects.all()[:3]
+        else:
+            return People.objects.filter(pk=pk)
+
+    @action(methods=['get'], detail=False)                                  # detail=True для получения одного объекта, False для списка
+    def all_category(self, request):                                        # http://127.0.0.1:8000/api/v2/people/all_category/
+        cats = Category.objects.all()
+        return Response({'category': [c.name for c in cats]})
+
+    @action(methods=['get'], detail=True)                                   # http://127.0.0.1:8000/api/v2/people/1/category/
+    def category(self, request, pk=None):
+        cat = Category.objects.get(pk=pk)
+        return Response({'category': cat.name})
+
+# ---------------------------------------
 class PeopleAPIList(generics.ListCreateAPIView):                            # ListCreateAPIView для get и post запросов
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly, )                      # Для создания поста нужно быть авторизованным
 
 
-class PeopleAPIUpdate(generics.UpdateAPIView):
+class PeopleAPIUpdate(generics.RetrieveUpdateAPIView):
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
+    permission_classes = (IsOwnerOrReadOnly, )                          # IsOwnerOrReadOnly - custom permission
 
 
-class PeopleAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+class PeopleAPIDestroy(generics.RetrieveDestroyAPIView):
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
+    permission_classes = (IsAdminOrReadOnly, )                          # IsAdminOrReadOnly - custom permission
 
 
-class PeopleViewSet(viewsets.ModelViewSet):                                 # ModelViewSet заменяет 3 последних класса и удаление
+class PeopleAPIDetail(generics.RetrieveUpdateDestroyAPIView):           # RetrieveUpdateDestroyAPIView выделяет, обновляет, удаляет объект
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
+    permission_classes = (IsAuthenticated, )
+    authentication_classes = (TokenAuthentication, )
+# ---------------------------------------
 
 # ------------------------------------------------------

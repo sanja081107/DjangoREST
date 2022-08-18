@@ -73,8 +73,10 @@ from .models import *
 # 5-----------------------------------------------------
 
 class PeopleSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
     class Meta:
         model = People
-        fields = ('title', 'content', 'time_create', 'time_update', 'is_published', 'cat')
+        fields = ('title', 'content', 'time_create', 'time_update', 'is_published', 'cat', 'user')
 
 # ------------------------------------------------------
