@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
 from people.views import *
 from rest_framework import routers
@@ -25,9 +26,12 @@ router.register(r'people', PeopleViewSet, basename='people')                    
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/drf-auth/', include('rest_framework.urls')),                           # аутентификация по session_id
+    path('api/v1/drf-auth/', include('rest_framework.urls')),                         # аутентификация по session_id
     path('api/v1/auth/', include('djoser.urls')),                                       # аутентификация по token
-    re_path(r'^auth/', include('djoser.urls.authtoken')),                               # аутентификация по token
+    re_path(r'^auth/', include('djoser.urls.authtoken')),                               # аутентификация по token http://127.0.0.1:8000/auth/token/login/
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),          # аутентификация по JWT
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),         # аутентификация по JWT
+    path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),            # аутентификация по JWT
 
     path('api/v1/people_list/', PeopleAPIView.as_view()),
     path('api/v1/people_list/<int:pk>/', PeopleAPIView.as_view()),

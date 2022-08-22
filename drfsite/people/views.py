@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework import generics, viewsets
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -162,29 +163,36 @@ class PeopleViewSet(viewsets.ModelViewSet):                                 # Mo
         return Response({'category': cat.name})
 
 # ---------------------------------------
+class PeopleAPIListPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = 'page_size'
+    max_page_size = 5
+
+
 class PeopleAPIList(generics.ListCreateAPIView):                            # ListCreateAPIView для get и post запросов
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
     permission_classes = (IsAuthenticatedOrReadOnly, )                      # Для создания поста нужно быть авторизованным
+    pagination_class = PeopleAPIListPagination
 
 
 class PeopleAPIUpdate(generics.RetrieveUpdateAPIView):
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
-    permission_classes = (IsOwnerOrReadOnly, )                          # IsOwnerOrReadOnly - custom permission
+    permission_classes = (IsOwnerOrReadOnly, )                              # IsOwnerOrReadOnly - custom permission
 
 
 class PeopleAPIDestroy(generics.RetrieveDestroyAPIView):
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
-    permission_classes = (IsAdminOrReadOnly, )                          # IsAdminOrReadOnly - custom permission
+    permission_classes = (IsAdminOrReadOnly, )                              # IsAdminOrReadOnly - custom permission
 
 
-class PeopleAPIDetail(generics.RetrieveUpdateDestroyAPIView):           # RetrieveUpdateDestroyAPIView выделяет, обновляет, удаляет объект
+class PeopleAPIDetail(generics.RetrieveUpdateDestroyAPIView):               # RetrieveUpdateDestroyAPIView выделяет, обновляет, удаляет объект
     queryset = People.objects.all()
     serializer_class = PeopleSerializer
     permission_classes = (IsAuthenticated, )
-    authentication_classes = (TokenAuthentication, )
+    # authentication_classes = (TokenAuthentication, )
 # ---------------------------------------
 
 # ------------------------------------------------------
